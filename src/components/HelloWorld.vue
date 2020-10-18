@@ -1,80 +1,30 @@
 <template>
-  <div class="hello">
-  <!-- 钱包选择器 -->
-    <a-select
-      placeholder="选择钱包查询"
-      style="width: 400px"
-      :show-arrow="false"
-      :filter-option="false"
-      :not-found-content="null"
-      @change="handleAddressChange">
-      <a-select-option v-for="item in walletAddress" :key="item.address">
-        {{item.name}}
-      </a-select-option>
-    </a-select>
-
-  <!-- 筛选 -->
-    <div style="margin: 10px">
-
-    <span>选择类型： </span>
-    <a-select
-      v-model="search.filtertype"
-      placeholder="选择类型"
-      style="width: 200px"
-      :filter-option="false"
-      :not-found-content="null">
-      <a-select-option v-for="item in filters.typefilter" :key="item.value">
-        {{item.text}}
-      </a-select-option>
-    </a-select>
-
-    <span style="margin-left: 100px">额度条件： </span>
-    <a-select
-      v-model="search.filteroperator"
-      placeholder="条件"
-      style="width: 100px"
-      :filter-option="false"
-      :not-found-content="null">
-      <a-select-option v-for="item in filters.operatorfilters" :key="item.value">
-        {{item.text}}
-      </a-select-option>
-    </a-select>  
-
-    <a-input-number style="width: 100px" v-model="search.filtervalue" placeholder="200"/>
-
-    <a-select
-      v-model="search.filterunit"
-      placeholder="单位"
-      style="width: 100px"
-      :filter-option="false"
-      :not-found-content="null">
-      <a-select-option v-for="item in filters.unitfilters" :key="item.value">
-        {{item.text}}
-      </a-select-option>
-    </a-select>       
-
-    <a-button type="primary" @click="submitFilter">
-        查询
-    </a-button>
+  <div>
+  <!-- 搜索 -->
+    <div>
+      <a-input-search placeholder="输入视频hash检索"
+          style="width: 50%;"
+          size="large"
+          class="mg20 topfix"
+          enter-button @search="onSearch"/> 
     </div>
-  <!-- 表格 -->
-    <a-table :columns="columns" :data-source="tableData"
-        :pagination="pagination"
-        @change="handleTableChange"
-      >
-      <!-- <span slot="timestamp" slot-scope="timestamp">{{ formatterTime(timestamp) }}</span> -->
-      <div slot="cid" slot-scope="cid">
-        <div class="cid" type="link" block @click="gotomessage(cid)">
-        {{fix(cid)}}
-        </div>
-      </div>
-      <div slot="from" slot-scope="from">
-        {{fix(from)}}
-      </div>
-      <!-- <span slot="value" slot-scope="value">{{ formatFilValue(value) }}</span> -->
-
-    </a-table>
-
+    <div class="video-tabs">
+      <a-tabs default-active-key="1" @change="callback">
+        <a-tab-pane key="1" tab="播放最多">
+            <video  controls autoplay height="400">
+              <source src="http://61.155.145.10:8080/ipfs/QmRGmJgP4q4FkyZ7xiLH4UKuN4ZGF5WbYHQ4W94uXUeqfL" type="video/mp4"/>
+            </video>
+        </a-tab-pane>
+        <a-tab-pane key="2" tab="搞笑" force-render>
+          Content of Tab Pane 2
+        </a-tab-pane>
+        <a-tab-pane key="3" tab="电影">
+          Content of Tab Pane 3
+        </a-tab-pane>
+      </a-tabs>
+    </div>
+  
+   
   </div>
 </template>
 
@@ -82,61 +32,12 @@
 import axios from 'axios'
 import moment from 'moment'
 
-const columns = [
-  {
-    title: '区块高度',
-    dataIndex: 'block_height',
-    key: 'block_height',
-    width: '8%',
-  },
-  {
-    title: '时间',
-    dataIndex: 'timestamp_str',
-    key: 'timestamp_str',
-    width: '12%',
-
-  },
-  {
-    title: '消息id',
-    dataIndex: 'cid',
-    key: 'cid',
-    ellipsis: true,
-    scopedSlots: { customRender: 'cid'},
-  },
-  {
-    title: 'from',
-    dataIndex: 'from',
-    key: 'from',
-    ellipsis: true,
-    scopedSlots: { customRender: 'from'},
-  },
-  {
-    title: 'to',
-    dataIndex: 'to',
-    key: 'to',
-    ellipsis: true,
-  },
-  {
-    title: '值',
-    key: 'income_str',
-    dataIndex: 'income_str',
-    scopedSlots: { customRender: 'value'},
-    width: '20%',
-  },
-  {
-    title: '类型',
-    dataIndex: 'type',
-    key: 'type',
-  },
-];
-
 export default {
   name: 'HelloWorld',
   props: {
     msg: String
   },
   mounted() {
-    this.getWallet()
   },
 
   methods: {
@@ -146,13 +47,13 @@ export default {
     },
 
     getWallet: function() {
-      axios.get(this.apiPrefix + '/wallet').then((response) => {
+      axios.get('/wallet').then((response) => {
         this.walletAddress = response.data
       })
     },
     getTransfers: function(page, pagesize) {
       var conditions = this.buildCondition()
-      var u = this.apiPrefix + '/wallet/' + this.value + "?page=" + page + "&pageSize=" + pagesize
+      var u = '/api/wallet/' + this.value + "?page=" + page + "&pageSize=" + pagesize
       if (conditions.length > 0) {
         u += conditions
       }
@@ -180,7 +81,7 @@ export default {
         return (fvalue/Math.pow(10,18)).toFixed(5) + " FIL"
       }
       if (Math.abs(fvalue) > Math.pow(10, 6) ) {
-        return (fvalue/Math.pow(10,9)).toFixed(5) + " nonaFIL"
+        return (fvalue/Math.pow(10,9)).toFixed(5) + " nanoFIL"
       }
       return fvalue.toFixed(5) + " attoFIL"
     },
@@ -199,28 +100,64 @@ export default {
       this.getTransfers(1, 20)
     },
     gotomessage: function(cid) {
-       var href="https://filscout.io/zh/pc/message/" + cid
+       var href="http://se.sycdn.kuwo.cn/03b9c356fae87bdd305b704dec7adaa6/5f8a8b7b/resource/n2/66/97/703846473.mp3" + cid
        window.open(href,'_blank')
     },
     fix: function(str) {
       if  (str.length > 10) {
-        return str.substring(0, 6)+'****'+str.substring(str.length-6,str.length)
+        return str.substring(0, 10)+'****'+str.substring(str.length-10,str.length)
       }
       return str
+    },
+    onSearch: function(value) {
+      console.log(value);
+    },
+    tosize: function(bytes) {
+      if (bytes === 0) return '0 B';
+      var k = 1000, // or 1024
+        sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+        i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toPrecision(3) + ' ' + sizes[i];
+    },
+    startPlay: function(record, ind) {
+      record.play = false
+      if (this.playStatus.isPlay) {
+        this.tableData[this.playStatus.currentIndex]['play'] = true
+        this.playStatus.audio.pause();
+      }
+      this.playStatus.isPlay = true
+      this.playStatus.currentIndex = (this.playStatus.currentPage - 1) * this.pagination.pageSize + ind
+      this.playSound(record.url)
+    },
+    stopPlay: function(record) {
+      record.play = true
+      this.playStatus.isPlay = false 
+      this.playStatus.audio.pause();
+
+    },
+    playSound: function (sound) {
+      if(sound) {
+        var audio = new Audio(sound);
+        this.playStatus.audio = audio
+        this.playStatus.audio.play();
+      }
     }
   },
   data: function() {
     return {
       walletAddress:  [],
       value: "",
-      apiPrefix: "/v1",
-      // apiPrefix: "http://127.0.0.1:8080/v1",
-      columns: columns,
-      tableData: [],
       pagination: {
-        total: 20,
-        pageSize: 20,
+        total: 50,
+        pageSize: 8,
         defaultCurrent: 1,
+        onChange: (current) => {this.playStatus.currentPage = current}
+      },
+      playStatus: {
+        isPlay: false,
+        currentIndex: 0, // 当前数据索引
+        currentPage: 1, // 当前页面索引
+        audio: {},
       },
       search: {
         filtervalue: 0,
@@ -276,28 +213,17 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
+
 a {
   color: #42b983;
 }
 
-.cid {
-
-  text-overflow:ellipsis;
-  cursor:pointer;
-}
-.cid:hover{
-  color:blue;
+.mg20 {
+  margin: 5px;
 }
 
+.video-tabs {
+  margin-left: 100px;
+  margin-right: 100px;
+}
 </style>
